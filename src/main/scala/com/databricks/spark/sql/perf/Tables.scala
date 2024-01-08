@@ -149,7 +149,17 @@ abstract class Tables(sqlContext: SQLContext, scaleFactor: String,
           stringData.select(columns: _*)
         }
 
-        convertedData
+        val convertedDataWithPartitionColumns = {
+          if (partitionColumns.nonEmpty) {
+            partitionColumns.foldLeft(convertedData)(
+              (convertedData, col) => convertedData.withColumn( col + "_1", convertedData(col) )
+            )
+          } else {
+            convertedData
+          }
+        }
+
+        convertedDataWithPartitionColumns
       } else {
         sqlContext.createDataFrame(rows, StructType(Seq(StructField("value", StringType))))
       }
